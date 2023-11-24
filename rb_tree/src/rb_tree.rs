@@ -7,8 +7,8 @@ pub struct RBTree<K: std::cmp::PartialOrd + Copy> {
     root: StrongNodeRef<K>
 }
 
-type StrongNodeRef<K> = Option<Rc<RefCell<RBNode<K>>>>;
-type WeakNodeRef<K> = Option<Weak<RefCell<RBNode<K>>>>;
+type StrongNodeRef<K> = Option<Rc<RBNode<K>>>;
+type WeakNodeRef<K> = Option<Weak<RBNode<K>>>;
 
 struct RBNode<K: std::cmp::PartialOrd + Copy> {
     color: RBColor,
@@ -140,7 +140,7 @@ Left-Rotate(T,x)
         }
         let mut y = get_right(x);
         x.as_ref().map(|rc| {
-            rc.borrow_mut().right = 
+            
         });
     }
 
