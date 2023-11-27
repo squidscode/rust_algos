@@ -378,18 +378,19 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
             print!("{}", s);
             if 0 < indent {
                 if nt == node_type::LEFT {
-                    print!("└ ");
+                    print!("└");
                 } else {
-                    print!("┌ ");
+                    print!("┌");
                 }
             }
-            println!("{} {:?} ct:{}", 
+            println!("{}- {:?} {}", 
                 match rf.borrow().color {
-                    RBColor::Black => "B", 
-                    RBColor::Red => "R"
+                    RBColor::Black => "", 
+                    RBColor::Red => "\x1b[41m"
                 }, 
                 rf.borrow().key,
-                Rc::strong_count(rf)
+                // Rc::strong_count(rf),
+                "\x1b[0m"
             );
             Self::print_internal(left_node, indent + 1, node_type::LEFT, lft_str);
         }
@@ -404,7 +405,16 @@ impl<T: std::cmp::PartialOrd + Copy> Drop for RBTree<T> {
 
 fn main() {
     let mut tree = RBTree::<i32>::new();
-    for i in 1..100 {
+    for i in 51..61 {
+        tree.insert(i);
+    }
+    for i in 1..30 {
+        tree.insert(i);
+    }
+    for i in 70..100 {
+        tree.insert(i);
+    }
+    for i in 100..1000 {
         tree.insert(i);
     }
     tree.print();
