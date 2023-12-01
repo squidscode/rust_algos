@@ -188,7 +188,6 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
                 }
             }
         }
-        
         self.insert_fixup(z_node);
         return self;
     }
@@ -485,6 +484,44 @@ Left-Rotate(T,x)
         set_right(&y, clone_node(&x));
         set_parent(&x, to_weak(&y));
     }
+
+    fn is_rb_tree(&self) -> bool {
+        if get_color(&self.root) == RBColor::Red {
+            return false;
+        }
+        if !self.black_height_invariant_satisfied() {
+            return false;
+        }
+        if !self.adjacent_red_invariant_satisfied(&self.root) {
+            return false;
+        }
+        return true;
+    }
+
+    fn black_height_invariant_satisfied(&self) -> bool {
+        return self.get_black_height(&self.root) != -1;
+    }
+
+    /* Returns: the black height of the node (inclusive) or -1 if the black height
+     * invariant is broken */
+    fn get_black_height(&self, node: &RBNode<K>) -> i32 {
+        if node.is_none() {
+            return 0;
+        }
+        let lft_height = self.get_black_height(&get_left(node));
+        let rgt_height = self.get_black_height(&get_right(node));
+        if lft_height == rgt_height {
+            return lft_height + match get_color(node) {RBColor::Red => 0, RBColor::Black => 1};
+        }
+        return -1;
+    }
+
+    fn adjacent_red_invariant_satisfied(&self, node: &RBNode<K>) -> bool {
+        return node.is_none() || match get_color(node) {
+            RBColor::Black => true,
+            RBColor::Red => get_color(&get_left(node)) == RBColor::Black && get_color(&get_right(node)) == RBColor::Black
+        } && self.adjacent_red_invariant_satisfied(&get_left(node)) && self.adjacent_red_invariant_satisfied(&get_right(node));
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -538,13 +575,12 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
 
 fn main() {
     let mut tree = RBTree::<i32>::new();
-    // for i in 51..61 {
-    //     tree.insert(i);
-    // }
+    let mut v: Vec<i32> = vec![];
     for i in 1..31 {
         tree.insert(i);
     }
     tree.print();
+    
     tree.delete_node(&tree.find(5));
     tree.print();
 
