@@ -3,14 +3,15 @@ use std::rc::Rc;
 use std::rc::Weak;
 use std::cell::RefCell;
 
-pub struct RBTree<K: std::cmp::PartialOrd + Copy> {
+pub struct RBTree<K: std::cmp::PartialOrd> {
     root: RBNode<K>
 }
 
 pub type RBNode<K> = Option<Rc<RefCell<RBNodeInternal<K>>>>;
 type WeakRBNode<K> = Option<Weak<RefCell<RBNodeInternal<K>>>>;
 
-pub struct RBNodeInternal<K: std::cmp::PartialOrd + Copy> {
+#[derive(Debug)]
+pub struct RBNodeInternal<K: std::cmp::PartialOrd> {
     color: RBColor,
     key: K,
     right: RBNode<K>,
@@ -18,8 +19,8 @@ pub struct RBNodeInternal<K: std::cmp::PartialOrd + Copy> {
     p: WeakRBNode<K>
 }
 
-#[derive(Copy, Clone, PartialEq)]
-enum RBColor {
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum RBColor {
     Red,
     Black
 }
@@ -49,15 +50,15 @@ enum RBColor {
     RB-Insert-fixup(T,z)
 */
 
-fn clone_node<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBNode<T> {
+fn clone_node<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> RBNode<T> {
     node.as_ref().map(|rc| Rc::clone(&rc))
 }
 
-fn clone_weak_node<T: std::cmp::PartialOrd + Copy>(node: &WeakRBNode<T>) -> WeakRBNode<T> {
+fn clone_weak_node<T: std::cmp::PartialOrd>(node: &WeakRBNode<T>) -> WeakRBNode<T> {
     node.as_ref().map(|rc| Weak::clone(&rc))
 }
 
-fn get_left<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBNode<T> {
+fn get_left<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> RBNode<T> {
     match node.as_ref() {
         None => None,
         Some(val) => {
@@ -66,7 +67,7 @@ fn get_left<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBNode<T> {
     }
 }
 
-fn get_right<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBNode<T> {
+fn get_right<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> RBNode<T> {
     match node.as_ref() {
         None => None,
         Some(val) => {
@@ -75,7 +76,7 @@ fn get_right<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBNode<T> {
     }
 }
 
-fn get_parent<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> WeakRBNode<T> {
+fn get_parent<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> WeakRBNode<T> {
     match clone_node(node) {
         None => None,
         Some(val) => {
@@ -84,7 +85,7 @@ fn get_parent<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> WeakRBNode<T>
     }
 }
 
-fn get_color<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBColor {
+fn get_color<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> RBColor {
     match node.as_ref() {
         None => RBColor::Black,
         Some(val) => {
@@ -93,40 +94,31 @@ fn get_color<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> RBColor {
     }
 }
 
-fn get_key<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> Option<T> {
-    match node.as_ref() {
-        None => None,
-        Some(val) => {
-            Some(val.borrow().key)
-        }
-    }
-}
-
-fn set_left<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>, left: RBNode<T>) {
+fn set_left<T: std::cmp::PartialOrd>(node: &RBNode<T>, left: RBNode<T>) {
     node.as_ref().map(|val| {
         val.borrow_mut().left = left;
     });
 }
 
-fn set_right<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>, right: RBNode<T>) {
+fn set_right<T: std::cmp::PartialOrd>(node: &RBNode<T>, right: RBNode<T>) {
     node.as_ref().map(|val| {
         val.borrow_mut().right = right;
     });
 }
 
-fn set_parent<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>, parent: WeakRBNode<T>) {
+fn set_parent<T: std::cmp::PartialOrd>(node: &RBNode<T>, parent: WeakRBNode<T>) {
     node.as_ref().map(|val| {
         val.borrow_mut().p = parent;
     });
 }
 
-fn set_color<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>, color: RBColor) {
+fn set_color<T: std::cmp::PartialOrd>(node: &RBNode<T>, color: RBColor) {
     node.as_ref().map(|val| {
         val.borrow_mut().color = color;
     });
 }
 
-fn to_weak<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> WeakRBNode<T> {
+fn to_weak<T: std::cmp::PartialOrd>(node: &RBNode<T>) -> WeakRBNode<T> {
     match node.as_ref() {
         None => None,
         Some(val) => {
@@ -135,7 +127,7 @@ fn to_weak<T: std::cmp::PartialOrd + Copy>(node: &RBNode<T>) -> WeakRBNode<T> {
     }
 }
 
-fn to_strong<T: std::cmp::PartialOrd + Copy>(node: &WeakRBNode<T>) -> RBNode<T> {
+fn to_strong<T: std::cmp::PartialOrd>(node: &WeakRBNode<T>) -> RBNode<T> {
     match node.as_ref() {
         None => None,
         Some(val) => {
@@ -144,13 +136,19 @@ fn to_strong<T: std::cmp::PartialOrd + Copy>(node: &WeakRBNode<T>) -> RBNode<T> 
     }
 }    
 
-impl<K: std::cmp::PartialOrd + Copy> PartialEq<RBNodeInternal<K>> for RBNodeInternal<K> {
+impl<K: std::cmp::PartialOrd> PartialEq<RBNodeInternal<K>> for RBNodeInternal<K> {
     fn eq(&self, other: &Self) -> bool {
         self.key == other.key && self.left == other.left && self.right == other.right
     }
 } 
 
-impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
+#[derive(Copy, Clone, PartialEq)]
+enum NodeChildType {
+    LEFT,
+    RIGHT
+}
+
+impl<K: std::cmp::PartialOrd + Debug> RBTree<K> {
     pub fn new() -> RBTree<K> {
         RBTree {root: None}
     }
@@ -158,6 +156,7 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
     pub fn insert(&mut self, key: K) -> &mut Self {
         // println!("Inserting {:?}!", key);
         // self.print();
+        if self.exists(&key) {return self;} /*  */
         let mut y: RBNode<K> = None;
         let mut x: RBNode<K> = clone_node(&self.root);
         while let Some(rc_node) = clone_node(&x) {
@@ -175,15 +174,18 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
             left: None,
             p: y.as_ref().map(|rc| Rc::downgrade(&rc))
         };
-        let z_node = Some(Rc::new(RefCell::new(z)));
+        let z_node;
         match y {
             None => {
+                z_node = Some(Rc::new(RefCell::new(z)));
                 self.root = clone_node(&z_node);
             }
             Some(rc) => {
-                if key < rc.borrow().key {
+                if z.key < rc.borrow().key {
+                    z_node = Some(Rc::new(RefCell::new(z)));
                     rc.borrow_mut().left = clone_node(&z_node);
                 } else {
+                    z_node = Some(Rc::new(RefCell::new(z)));
                     rc.borrow_mut().right = clone_node(&z_node);
                 }
             }
@@ -280,50 +282,70 @@ RB-Insert-fixup(T,z)
         set_color(&self.root, RBColor::Black);
     }
 
-    pub fn find(&self, key: K) -> RBNode<K> {
+    fn exists(&self, key: &K) -> bool {
+        return self.find(key).is_some();
+    }
+
+    fn find(&self, key: &K) -> RBNode<K> {
         let mut x = clone_node(&self.root);
         while x.is_some() {
-            let node_key = &get_key(&x).expect("Key must exist!");
-            if &key < node_key {
-                x = get_left(&x);
-            } else if &key == node_key {
+            let rc = clone_node(&x).unwrap();
+            let node_key = &rc.borrow().key;
+            if key < node_key {
+                x = clone_node(&rc.borrow().left);
+            } else if key == node_key {
                 return x;
             } else {
-                x = get_right(&x);
+                x = clone_node(&rc.borrow().right);
             }
         }
         return None; // x must be None
     }
 
-    pub fn delete(&mut self, key: K) -> &mut Self {
-        self.delete_node(&self.find(key))
+    pub fn remove(&mut self, key: &K) -> &mut Self {
+        self.remove_node(&self.find(key))
     }
 
-    pub fn delete_node(&mut self, z: &RBNode<K>) -> &mut Self {
+    
+    pub fn remove_node(&mut self, z: &RBNode<K>) -> &mut Self {
         if z.is_none() {return self;}
         let mut y = clone_node(z);
         let mut y_original_color = get_color(&y);
+        let mut x_parent: RBNode<K>;
+        let mut x_parent_relationship: NodeChildType;
         let mut x: RBNode<K>;
-        let delete_node: RBNode<K>;
         if get_left(z).is_none() {
             x = get_right(z);
-            delete_node = Self::create_phantom_leaf(&mut x, &y, false);
+            x_parent = clone_node(&to_strong(&get_parent(&z)));
+            x_parent_relationship = if z == &get_left(&to_strong(&get_parent(&z))) {
+                NodeChildType::LEFT
+            } else {
+                NodeChildType::RIGHT
+            };
             self.transplant(z, &get_right(z));
         } else if get_right(z).is_none() {
             x = get_left(z);
-            delete_node = Self::create_phantom_leaf(&mut x, &y, true);
+            x_parent = clone_node(&to_strong(&get_parent(&z)));
+            x_parent_relationship = if z == &get_left(&to_strong(&get_parent(&z))) {
+                NodeChildType::LEFT
+            } else {
+                NodeChildType::RIGHT
+            };
             self.transplant(z, &get_left(z));
         } else {
             y = Self::get_minimum(&get_right(z));
             y_original_color = get_color(&y);
             x = get_right(&y);
-            delete_node = Self::create_phantom_leaf(&mut x, &y, false);
-            if y != get_right(&z) {
+            x_parent = clone_node(&to_strong(&get_parent(&y)));
+            if y != get_right(&z) { /* the minimum is farther down the tree. */
                 self.transplant(&y, &get_right(&y));
                 set_right(&y, get_right(&z));
                 set_parent(&get_right(&y), to_weak(&y));
+                x_parent_relationship = NodeChildType::LEFT;
             } else {
                 set_parent(&x, to_weak(&y));
+                x_parent = clone_node(&y);
+                x_parent_relationship = NodeChildType::RIGHT;
             }
             self.transplant(&z, &y);
             set_left(&y, get_left(&z));
@@ -331,9 +353,8 @@ RB-Insert-fixup(T,z)
             set_color(&y, get_color(&z));
         }
         if y_original_color == RBColor::Black {
-            self.delete_fixup(clone_node(&x));
+            self.remove_fixup(x, x_parent, x_parent_relationship);
         }
-        if delete_node.is_some() { self.transplant(&delete_node, &None); }
         return self;
     }
 
@@ -345,65 +366,69 @@ RB-Insert-fixup(T,z)
         return z_node;
     }
 
-    fn create_phantom_leaf(mut x: &mut RBNode<K>, parent: &RBNode<K>, left: bool) -> RBNode<K> {
-        if x.is_none() {
-            let z = Some(Rc::new(RefCell::new(RBNodeInternal { color: RBColor::Black, key: get_key(&parent).unwrap(), right: None, left: None, p: to_weak(&parent)})));
-            if left {set_left(parent, clone_node(&z))} else {set_right(parent, clone_node(&z))};
-            *x = clone_node(&z);
-            return z;
-        }
-        return None;
-    }
-
-    fn delete_fixup(&mut self, mut x: RBNode<K>) {
-        while x != self.root && x.is_some() && get_color(&x) == RBColor::Black {
-            if x == get_left(&to_strong(&get_parent(&x))) {
-                let mut w = get_right(&to_strong(&get_parent(&x)));
+    fn remove_fixup(&mut self, mut x: RBNode<K>, mut x_parent: RBNode<K>, mut x_parent_relationship: NodeChildType) {
+        while x != self.root && get_color(&x) == RBColor::Black {
+            if x_parent_relationship == NodeChildType::LEFT {
+            // if x == get_left(&to_strong(&get_parent(&x))) { 
+                // let mut w = get_right(&to_strong(&get_parent(&x)));
+                let mut w = get_right(&x_parent);
                 if get_color(&w) == RBColor::Red {
                     set_color(&w, RBColor::Black);
-                    set_color(&to_strong(&get_parent(&x)), RBColor::Red);
-                    self.left_rotate(&mut to_strong(&get_parent(&x)));
-                    w = get_right(&to_strong(&get_parent(&x)));
+                    set_color(&x_parent, RBColor::Red);
+                    self.left_rotate(&mut x_parent); /* x_parent is still the parent of x. */
+                    w = get_right(&x_parent);
                 }
                 if get_color(&get_left(&w)) == RBColor::Black && get_color(&get_right(&w)) == RBColor::Black {
                     set_color(&w, RBColor::Red);
-                    x = to_strong(&get_parent(&x));
+                    x = x_parent;
+                    x_parent = to_strong(&get_parent(&x));
+                    x_parent_relationship = if x == get_left(&x_parent) {
+                        NodeChildType::LEFT
+                    } else {
+                        NodeChildType::RIGHT
+                    };
                 } else {
                     if get_color(&get_right(&w)) == RBColor::Black {
                         set_color(&get_left(&w), RBColor::Black);
                         set_color(&w, RBColor::Red);
                         self.right_rotate(&mut w);
-                        w = get_right(&to_strong(&get_parent(&x)));
+                        w = get_right(&x_parent);
                     }
-                    set_color(&w, get_color(&to_strong(&get_parent(&x))));
-                    set_color(&to_strong(&get_parent(&x)), RBColor::Black);
-                    set_color(&get_right(&x), RBColor::Black);
-                    self.left_rotate(&mut to_strong(&get_parent(&x)));
-                    x = clone_node(&self.root);
+                    set_color(&w, get_color(&x_parent));
+                    set_color(&x_parent, RBColor::Black);
+                    set_color(&get_right(&w), RBColor::Black);
+                    self.left_rotate(&mut x_parent);
+                    break;
                 }
             } else {
-                let mut w = get_left(&to_strong(&get_parent(&x)));
+                let mut w = get_left(&x_parent);
                 if get_color(&w) == RBColor::Red {
                     set_color(&w, RBColor::Black);
-                    set_color(&to_strong(&get_parent(&x)), RBColor::Red);
-                    self.right_rotate(&mut to_strong(&get_parent(&x)));
-                    w = get_left(&to_strong(&get_parent(&x)));
+                    set_color(&x_parent, RBColor::Red);
+                    self.right_rotate(&mut x_parent);
+                    w = get_left(&x_parent);
                 }
                 if get_color(&get_left(&w)) == RBColor::Black && get_color(&get_right(&w)) == RBColor::Black {
                     set_color(&w, RBColor::Red);
-                    x = to_strong(&get_parent(&x));
+                    x = x_parent;
+                    x_parent = to_strong(&get_parent(&x));
+                    x_parent_relationship = if x == get_left(&x_parent) {
+                        NodeChildType::LEFT
+                    } else {
+                        NodeChildType::RIGHT
+                    };
                 } else {
                     if get_color(&get_left(&w)) == RBColor::Black {
                         set_color(&get_right(&w), RBColor::Black);
                         set_color(&w, RBColor::Red);
                         self.left_rotate(&mut w);
-                        w = get_left(&to_strong(&get_parent(&x)));
+                        w = get_left(&x_parent);
                     }
-                    set_color(&w, get_color(&to_strong(&get_parent(&x))));
-                    set_color(&to_strong(&get_parent(&x)), RBColor::Black);
-                    set_color(&get_left(&x), RBColor::Black);
-                    self.right_rotate(&mut to_strong(&get_parent(&x)));
-                    x = clone_node(&self.root);
+                    set_color(&w, get_color(&x_parent));
+                    set_color(&x_parent, RBColor::Black);
+                    set_color(&get_left(&w), RBColor::Black);
+                    self.right_rotate(&mut x_parent);
+                    break;
                 }
             }
         }
@@ -497,11 +522,11 @@ Left-Rotate(T,x)
         }
         return true;
     }
-
+    
     fn black_height_invariant_satisfied(&self) -> bool {
         return self.get_black_height(&self.root) != -1;
     }
-
+    
     /* Returns: the black height of the node (inclusive) or -1 if the black height
      * invariant is broken */
     fn get_black_height(&self, node: &RBNode<K>) -> i32 {
@@ -513,9 +538,10 @@ Left-Rotate(T,x)
         if lft_height == rgt_height {
             return lft_height + match get_color(node) {RBColor::Red => 0, RBColor::Black => 1};
         }
+        println!("bad node:{:?}", node);
         return -1;
     }
-
+    
     fn adjacent_red_invariant_satisfied(&self, node: &RBNode<K>) -> bool {
         return node.is_none() || match get_color(node) {
             RBColor::Black => true,
@@ -526,7 +552,7 @@ Left-Rotate(T,x)
 
 #[derive(Copy, Clone, PartialEq)]
 enum NodeType {ROOT, LEFT, RIGHT}
-impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
+impl<K: std::cmp::PartialOrd + Debug> RBTree<K> {
     fn print(&self) {
         let s = String::from("");
         Self::print_internal(&self.root, 0, NodeType::ROOT, s);
@@ -573,31 +599,64 @@ impl<K: std::cmp::PartialOrd + Copy + Debug> RBTree<K> {
     }
 }
 
-fn main() {
-    let mut tree = RBTree::<i32>::new();
-    let mut v: Vec<i32> = vec![];
-    for i in 1..31 {
-        tree.insert(i);
+#[cfg(test)]
+mod fuzzer {
+    use super::*;
+    use rand;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_inserts() {
+        for _ in 0..100 {
+            let mut tree = RBTree::<i32>::new();
+            for _ in 0..100 {
+                tree.insert(rand::random::<i32>());
+                assert!(tree.is_rb_tree());
+            }
+        }
     }
-    tree.print();
-    
-    tree.delete_node(&tree.find(5));
-    tree.print();
 
-    tree.delete_node(&tree.find(16));
-    tree.print();
-
-    tree.delete_node(&tree.find(17));
-    tree.print();
-
-    tree.delete_node(&tree.find(2));
-    tree.print();
-
-    tree.delete_node(&tree.find(12));
-    tree.print();
-
-    println!();
-
-
-
+    #[test]
+    fn test_inserts_and_delete() {
+        for test_num in 1..101 {
+            println!("Test #{} beginning.", test_num);
+            let mut tree = RBTree::<usize>::new();
+            let mut set = HashSet::<usize>::new();
+            for _ in 0..5000 {
+                let val = rand::random::<usize>();
+                let v2 = rand::random::<usize>();
+                match rand::random::<u32>() % 3 {
+                    0 => { /* insert */
+                        tree.insert(val);
+                        set.insert(val);
+                        assert!(tree.is_rb_tree(), "tree is not rb tree{}", {tree.print(); ""});
+                    },
+                    1 => { /* delete */
+                        if v2 % 3 <= 0 {continue;}
+                        let sz = set.len();
+                        let mut i = 0;
+                        let mut del: usize = 0;
+                        for v in set.iter() {
+                            if val % sz == i {
+                                del = *v;
+                                break;
+                            }
+                            i += 1;
+                        }
+                        tree.remove(&del);
+                        set.remove(&del);
+                        assert!(tree.is_rb_tree(), "tree is not rb tree{}", {tree.print(); ""});
+                    },
+                    2 => { /* exists */
+                        for v in set.iter() {
+                            assert_eq!(tree.exists(v), set.contains(v),
+                            "assert failed for tree of size {}", {tree.print(); set.len()});
+                        }
+                    },
+                    _ => unreachable!()
+                }
+            }
+            // println!("Test ended with set.len() = {}", set.len());
+        }
+    }
 }
