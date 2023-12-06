@@ -1,5 +1,8 @@
-mod Day1;
+mod d1;
+mod d2;
+mod d3;
+mod d4;
 
 fn main() {
-    Day1::solve()
+    d4::solve()
 }

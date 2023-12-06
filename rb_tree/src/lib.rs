@@ -156,7 +156,7 @@ impl<K: std::cmp::PartialOrd + Debug> RBTree<K> {
     pub fn insert(&mut self, key: K) -> &mut Self {
         // println!("Inserting {:?}!", key);
         // self.print();
-        if self.exists(&key) {return self;} /*  */
+        if self.contains(&key) {return self;} /*  */
         let mut y: RBNode<K> = None;
         let mut x: RBNode<K> = clone_node(&self.root);
         while let Some(rc_node) = clone_node(&x) {
@@ -282,7 +282,7 @@ RB-Insert-fixup(T,z)
         set_color(&self.root, RBColor::Black);
     }
 
-    fn exists(&self, key: &K) -> bool {
+    pub fn contains(&self, key: &K) -> bool {
         return self.find(key).is_some();
     }
 
@@ -649,7 +649,7 @@ mod fuzzer {
                     },
                     2 => { /* exists */
                         for v in set.iter() {
-                            assert_eq!(tree.exists(v), set.contains(v),
+                            assert_eq!(tree.contains(v), set.contains(v),
                             "assert failed for tree of size {}", {tree.print(); set.len()});
                         }
                     },
