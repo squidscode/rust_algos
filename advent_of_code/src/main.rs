@@ -6,10 +6,13 @@ mod d5;
 mod d6;
 mod d7;
 mod d7_p2;
+mod d8;
+mod d9;
+mod d10;
 mod util;
 
 use util::scan;
 
 fn main() {
-    d7_p2::solve()
+    d10::solve()
 }
