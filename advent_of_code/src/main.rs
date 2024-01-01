@@ -9,10 +9,11 @@ mod d7_p2;
 mod d8;
 mod d9;
 mod d10;
+mod d11;
 mod util;
 
 use util::scan;
 
 fn main() {
-    d10::solve()
+    d11::solve()
 }
